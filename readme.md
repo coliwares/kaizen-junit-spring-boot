@@ -191,7 +191,7 @@ public  interface  AccountService {
 Account  findById(Long  id);
 int  checkTotalTransfers(Long  bankId);
 BigDecimal  checkBalance(Long  accountId);
-void  bankTransfer(Long  OriginAccountNumber, Long  targetAccountNumber, BigDecimal  amount, Long bankId);
+void  bankTransfer(Long  OriginAccountNumber, Long  targetAccountNumber, BigDecimal  amount);
 }
 `````
 > **AccountServiceImpl.java  :** 
@@ -224,8 +224,8 @@ public  class  AccountServiceImpl  implements  AccountService{
 	}
 	  
 	@Override
-	public  void  bankTransfer(Long  originAccountNumber, Long  targetAccountNumber, BigDecimal  amount, Long bankId) {
-		Bank  bank = bankRepository.findById(bankId);
+	public  void  bankTransfer(Long  originAccountNumber, Long  targetAccountNumber, BigDecimal  amount) {
+		Bank  bank = bankRepository.findById(1L);
 		int  transferQty = bank.getTransferQty();
 		bank.setTransferQty(++transferQty);
 		bankRepository.update(bank);
@@ -246,6 +246,45 @@ public  class  AccountServiceImpl  implements  AccountService{
 public  class  InsufficientMoneyException  extends  RuntimeException {
 	public  InsufficientMoneyException(String  message) {
 		super(message);
+	}
+}
+````
+
+### Kata 1 - Creación del primer unit test
+
++ Crear clase de datos de prueba estáticos
++ Crear test que verifique el comportamiento de checkBalance usando la notación de displayName con la nomenclatura de BDD (Given -When - Then)
+
+> data.java
+```java
+public  class  Data {
+	public  static  final  Account  ACCOUNT_001 = new  Account(1L, "Cristian", new  BigDecimal(1000));
+	public  static  final  Account  ACCOUNT_002 = new  Account(2L, "Marcelo", new  BigDecimal(2000));
+	public  static  final  Bank  BANK = new  Bank(1L, "Bank of Square", 0);
+}
+```
+> test - given an account when check balance then return balance
+````java
+@SpringBootTest
+public  class  AccountServiceImplTest {
+  
+	AccountRepository  accountRepository;
+	BankRepository  bankRepository;
+	AccountService  accountService;
+	  
+	@BeforeEach
+	void  setUp(){
+		accountRepository = mock(AccountRepository.class);
+		bankRepository = mock(BankRepository.class);
+		accountService = new  AccountServiceImpl(accountRepository, bankRepository);
+	}
+	  
+	@Test
+	@DisplayName("given an account when check balance then return balance")
+	void  kata1(){
+		when(accountRepository.findById(1L)).thenReturn(Data.ACCOUNT_001);
+		BigDecimal  balance = accountService.checkBalance(1L);
+		assertEquals("1000", balance.toPlainString());
 	}
 }
 ````
